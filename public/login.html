@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #f43f5e;
+      color: #ffffff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #ff5e78;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Create Account</h2>
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="username">UserName</label>
+        <input type="text" id="username" name="username" required>
+      </div>
+      <div class="form-group">
+        <label for="useremail">UserEmail</label>
+        <input type="email" id="useremail" name="useremail" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+      </div>
+      <button type="submit" id="register">Create</button>
+    </form>
+  </div>
+
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAWirG8LiFOwGanZCH0sy1a6Q1ziy2Sni4",
+      authDomain: "recipe-5c228.firebaseapp.com",
+      projectId: "recipe-5c228",
+      storageBucket: "recipe-5c228.appspot.com",
+      messagingSenderId: "275293090860",
+      appId: "1:275293090860:web:be6e64da29fc42ae268d89",
+      measurementId: "G-7PDGTGJJLS"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById('signup-form').addEventListener('submit', async function (event) {
+      event.preventDefault(); // Prevent form submission
+
+      // Get user input
+      var username = document.getElementById('username').value;
+      var email = document.getElementById('useremail').value;
+      var password = document.getElementById('password').value;
+
+      // Validate and process user input (you can add more validation here)
+      if (username && email && password) {
+        try {
+          // Create user in Firebase Authentication
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+          // Send email verification
+          await sendEmailVerification(auth.currentUser);
+
+          // Add user details to Firestore with UID as document ID
+          await setDoc(doc(db, 'users', userCredential.user.uid), {
+            username: username,
+            email: email
+          });
+
+          // Registration successful
+          alert('Registration successful! Please verify your email before signing in.');
+
+          // Redirect to sign-in page
+          window.location.href = 'signin.html';
+        } catch (error) {
+          // Registration failed
+          console.error(error.message);
+          alert('Registration failed: ' + error.message);
+        }
+      } else {
+        alert('Please fill in all fields');
+      }
+    });
+  </script>
+</body>
+
+</html>

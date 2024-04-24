@@ -1,4 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { NavLink } from 'react-router-dom';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const Navbar = ({
   searchHandler,
@@ -7,23 +10,65 @@ const Navbar = ({
   inputField,
   savedItems,
 }) => {
-  // manupulating nav active class
-  const navActive = ({ isActive }) => {
-    return {
-      color: isActive ? "#f43f5e" : null,
-    };
+  const [username, setUsername] = useState('');
+
+  useEffect(() => {
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const db = getFirestore();
+        const userRef = doc(db, 'users', user.uid);
+        getDoc(userRef)
+          .then((docSnap) => {
+            if (docSnap.exists()) {
+              const userData = docSnap.data();
+              setUsername(userData.username);
+            } else {
+              console.log('User data not found in Firestore.');
+            }
+          })
+          .catch((error) => {
+            console.error('Error fetching user data:', error);
+          });
+      } else {
+        console.warn('User not signed in.');
+      }
+    });
+  }, []);
+
+  const navActive = ({ isActive }) => ({
+    color: isActive ? '#f43f5e' : null,
+  });
+
+  const signInHandler = () => {
+    window.location.href = 'signin.html';
   };
 
-  // Define the signInHandler function
-  const signInHandler = () => {
-    // Add your sign-in logic here
-    console.log("User signed in!");
+  const createAccountHandler = () => {
+    // Redirect to login.html when "Create Account" button is clicked
+    window.location.href = 'login.html';
+  };
+
+  const buttonStyles = {
+    backgroundColor: 'transparent',
+    color: '#f43f5e',
+    padding: '10px 20px',
+    borderRadius: '5px',
+    border: '1px solid #f43f5e',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '16px',
+    transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
+  };
+
+  const buttonHoverStyles = {
+    backgroundColor: '#f43f5e',
+    color: '#ffffff',
   };
 
   return (
-    <div className="navbar flex justify-between items-center container mx-auto py-8 flex-col lg:flex-row gap-5 lg:gap-0">
+    <div className="navbar flex justify-between items-center container mx-auto py-8 gap-5 lg:gap-0">
       <h2 className="logo text-2xl font-bold lowercase italic">
-        {/* Food<span className="text-rose-500">verse</span> */}
         <img src="/logo.png" width={350} alt="error" />
       </h2>
       <form className="search-bar" onSubmit={searchHandler}>
@@ -52,7 +97,7 @@ const Navbar = ({
           <NavLink
             style={navActive}
             to="/favourites"
-            className="text-gray-400 hover:text-gray-600 duration-300"
+            className="text-gray-400 hover:text-gray-600 duration-300 relative"
           >
             Favourites
             <span className="favourites-count font-bold text-sky-400">
@@ -60,26 +105,32 @@ const Navbar = ({
             </span>
           </NavLink>
         </li>
-        <li>
-          <button
-            style={{
-              backgroundColor: '#f43f5e',
-              color: '#ffffff',
-              padding: '10px 20px',
-              borderRadius: '5px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              fontSize: '16px',
-              boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-              transition: 'background-color 0.3s ease-in-out',
-            }}
-            onClick={signInHandler}
-            className="text-white hover:bg-red-600 duration-300 rounded-lg p-2"
-          >
-            Sign In
-          </button>
-        </li>
+        {username ? (
+          <li>
+            <span className="text-gray-400">Hello, {username}!</span>
+          </li>
+        ) : (
+          <>
+            <li>
+              <button
+                style={{ ...buttonStyles, ...buttonHoverStyles }}
+                onClick={signInHandler}
+                className="text-f43f5e hover:bg-f43f5e hover:text-white duration-300 rounded-lg p-2"
+              >
+                Sign In
+              </button>
+            </li>
+            <li>
+              <button
+                style={{ ...buttonStyles, ...buttonHoverStyles }}
+                onClick={createAccountHandler}
+                className="text-gray-400 hover:text-gray-600 duration-300 relative"
+              >
+                Create Account
+              </button>
+            </li>
+          </>
+        )}
       </ul>
     </div>
   );

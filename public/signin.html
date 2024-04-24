@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In</title>
+<style>
+  /* Basic styling */
+  body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+  }
+
+  form{
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"]{
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+  }
+
+  input[type="submit"]{
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+
+  input[type="submit"]:hover{
+    background-color: #45a049;
+  }
+</style>
+</head>
+<body>
+
+<form id="signin-form">
+  <h2>Sign In</h2>
+  <input type="email" id="email" placeholder="Email" required>
+  <input type="password" id="password" placeholder="Password" required>
+  <input type="submit" value="Sign In">
+</form>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-app.js"
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-auth.js"
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.10.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAWirG8LiFOwGanZCH0sy1a6Q1ziy2Sni4",
+  authDomain: "recipe-5c228.firebaseapp.com",
+  projectId: "recipe-5c228",
+  storageBucket: "recipe-5c228.appspot.com",
+  messagingSenderId: "275293090860",
+  appId: "1:275293090860:web:be6e64da29fc42ae268d89",
+  measurementId: "G-7PDGTGJJLS"
+  };
+
+  const app = initializeApp(firebaseConfig)
+  const auth = getAuth()
+  const db = getFirestore(app);
+  const mainPageUrl = 'http://localhost:3000/'; // Update the URL to point to the correct file
+  document.getElementById("signin-form").addEventListener("submit", function(event) {
+    event.preventDefault(); // Prevent form submission
+
+    // Get user input
+    var email = document.getElementById('email').value;
+    var password = document.getElementById('password').value;
+
+    // Validate and process user input (you can add more validation here)
+    if (email && password) {
+      // Check if the user is already registered
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          // User is already registered, sign in the user
+          signInWithEmailAndPassword(auth, email, password)
+            .then((userCredential) => {
+              // Signed in
+              const user = userCredential.user;
+              const userDocRef = doc(db, "users", user.uid);
+              getDoc(userDocRef)
+                .then((docSnap) => {
+                  if (docSnap.exists()) {
+                    // User data found, retrieve username
+                    const userData = docSnap.data();
+                    const username = userData.username; // Assuming username is stored in Firestore
+
+                    // Display username in alert
+                    alert(`Sign in successful as ${username}!`);
+
+                    // Redirect to main page or any other page as needed
+                    window.location.href = mainPageUrl;
+                  } else {
+                    alert("User data not found.");
+                  }
+                })
+                .catch((error) => {
+                  console.log("Error fetching user data:", error);
+                  alert("Error fetching user data.");
+                });
+            })
+            .catch((error) => {
+              const errorMessage = error.message;
+              console.log(errorMessage);
+              alert(errorMessage);
+            });
+        } else {
+          // User is not registered, show error message
+          alert("User not registered, please sign up.");
+        }
+      });
+    } else {
+      alert('Please fill in all fields');
+    }
+  });
+
+</script>
+
+</body>
+</html>
