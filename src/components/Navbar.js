@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 const Navbar = ({
@@ -11,11 +11,13 @@ const Navbar = ({
   savedItems,
 }) => {
   const [username, setUsername] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        setIsLoggedIn(true);
         const db = getFirestore();
         const userRef = doc(db, 'users', user.uid);
         getDoc(userRef)
@@ -31,11 +33,31 @@ const Navbar = ({
             console.error('Error fetching user data:', error);
           });
       } else {
+        setIsLoggedIn(false);
+        setUsername('');
         console.warn('User not signed in.');
       }
     });
   }, []);
 
+  const handleLogout = () => {
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        const mainPageUrl = 'http://localhost:3000/';
+        console.log('User signed out successfully.');
+        window.location.href = mainPageUrl;
+
+      })
+      .catch((error) => {
+        console.error('Error signing out:', error);
+      });
+  };
+
+  const onCLickHome = () => {
+    const mainPageUrl = 'http://localhost:3000/';
+    window.location.href = mainPageUrl;
+  }
   const navActive = ({ isActive }) => ({
     color: isActive ? '#f43f5e' : null,
   });
@@ -45,7 +67,6 @@ const Navbar = ({
   };
 
   const createAccountHandler = () => {
-    // Redirect to login.html when "Create Account" button is clicked
     window.location.href = 'login.html';
   };
 
@@ -69,7 +90,7 @@ const Navbar = ({
   return (
     <div className="navbar flex justify-between items-center container mx-auto py-8 gap-5 lg:gap-0">
       <h2 className="logo text-2xl font-bold lowercase italic">
-        <img src="/logo.png" width={350} alt="error" />
+        <img src="/logo.png" width={350} alt="error" onClick={onCLickHome}/>
       </h2>
       <form className="search-bar" onSubmit={searchHandler}>
         <input
@@ -87,7 +108,7 @@ const Navbar = ({
           <NavLink
             style={navActive}
             end
-            to="/"
+            onClick={onCLickHome}
             className="text-gray-400 hover:text-gray-600 duration-300"
           >
             Home
@@ -130,6 +151,17 @@ const Navbar = ({
               </button>
             </li>
           </>
+        )}
+        {username && isLoggedIn && (
+          <li>
+            <button
+              style={{ ...buttonStyles, ...buttonHoverStyles }}
+              onClick={handleLogout}
+              className="text-gray-400 hover:text-gray-600 duration-300 relative"
+            >
+              Logout
+            </button>
+          </li>
         )}
       </ul>
     </div>

@@ -1,14 +1,15 @@
-import React from "react";
 import FryingPan from "./FryingPan";
 import Recipe from "./Recipe";
 import Spinner from "./Spinner";
 
 const Home = ({ recipes, loading, error }) => {
   return (
-    <div className="home container mx-auto py-10 px-4 sm:px-6 lg:px-8">
-      {/* Introduction Section */}
-      <section className="introduction text-center mb-12">
-        <h1 className="home-title text-6xl font-bold mb-6 text-gray-900">
+    <div className="home container mx-auto py-10 flex flex-wrap gap-10 justify-center">
+      {/* condition for ideal position */}
+      {!loading && !error && recipes.length === 0 ? (
+        <div>
+           <section className="introduction text-center mb-12">
+            <h1 className="home-title text-6xl font-bold mb-6 text-gray-900">
           Welcome to Recipe Quest!
         </h1>
         <p className="home-description text-xl mb-8 text-gray-700">
@@ -45,35 +46,17 @@ const Home = ({ recipes, loading, error }) => {
           heights. Get ready to unlock a world of delicious possibilities with
           Recipe Quest!
         </p>
-      </section>
-
-      {/* Recipe List Section */}
-      {!loading && !error && recipes.length === 0 ? (
-        <div>
-          <ul className="recipe-list">
-            {recipes.map((recipe) => (
-              <Recipe key={recipe.id} recipe={recipe} />
-            ))}
-          </ul>
+        </section>
           <FryingPan />
         </div>
       ) : null}
 
-      {/* Loading/Error Handling */}
-      {loading && (
-        <div className="flex items-center justify-center">
-          <Spinner />
-        </div>
-      )}
+      {/* condition for loading position */}
+      {loading && <p>{error ? error : <Spinner />}</p>}
 
-      {/* Render Recipes */}
-      {recipes?.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recipes.map((recipe) => (
-            <Recipe key={recipe.id} recipe={recipe} />
-          ))}
-        </div>
-      )}
+      {/* condition after getting the recipes */}
+      {recipes?.length > 0 &&
+        recipes.map((recipe) => <Recipe recipe={recipe} key={recipe.id} />)}
     </div>
   );
 };
